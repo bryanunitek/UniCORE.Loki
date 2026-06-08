@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "dependencies": [
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/grafana/loki-release.git",
+          "subdir": "workflows"
+        }
+      },
+      "version": "52d476dc60de14b52b6dec2b33e86abeeb497fcc",
+      "sum": "Xmuvvfw2GyoFFNYxsFUSOEEC7BvP/Ln5sfDucjQvh/Q="
+    }
+  ],
+  "legacyImports": false
+}
