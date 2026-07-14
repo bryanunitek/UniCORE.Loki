@@ -38,7 +38,7 @@ Zone-aware replication is enabled by default for ingesters. This creates three i
 {{< /admonition >}}
 
 {{< admonition type="note" >}}
-We do not recommend running in microservices mode with `filesystem` storage. For the purpose of this guide, we will use MinIO as the object storage to provide a complete example. 
+We do not recommend running in microservices mode with `filesystem` storage. For the purpose of this guide, we will use the deprecated built-in MinIO subchart to provide a complete self-contained example. Configure a dedicated external object storage backend for production.
 {{< /admonition >}}
 
 
@@ -63,6 +63,10 @@ We do not recommend running in microservices mode with `filesystem` storage. For
    ```
 
 1. Create the configuration file `values.yaml`. The example below illustrates how to deploy Loki in test mode using MinIO as storage:
+
+   {{< admonition type="warning" >}}
+   The built-in MinIO subchart is deprecated and will be removed on 2026-10-31. The example below requires `ignoreMinioDeprecation: true` to render with chart v17+. For production, configure a dedicated external object storage backend.
+   {{< /admonition >}}
 
      ```yaml
      loki:
@@ -132,7 +136,7 @@ We do not recommend running in microservices mode with `filesystem` storage. For
        service:
          type: LoadBalancer
 
-
+     ignoreMinioDeprecation: true  # Temporary workaround – MinIO will be removed 2026-10-31
      # Enable minio for storage
      minio:
        enabled: true
@@ -386,6 +390,47 @@ singleBinary:
 {{< /collapse >}}
 
 To configure other storage providers, refer to the [Helm Chart Reference](../reference/).
+
+## Gateway API
+
+As an alternative to traditional Kubernetes Ingress, the Loki Helm chart supports [Gateway API](https://gateway-api.sigs.k8s.io/) routes. There are two independent options depending on whether you want to keep the nginx gateway or bypass it entirely.
+
+### Option 1: Expose the nginx gateway via Gateway API
+
+Use `gateway.route` to replace `gateway.ingress` with a Gateway API route that points to the nginx gateway. This keeps nginx as the proxy but exposes it through a Gateway API resource instead of a traditional Ingress.
+
+```yaml
+gateway:
+  ingress:
+    enabled: false  # disable traditional Ingress
+  route:
+    main:
+      enabled: true
+      kind: HTTPRoute
+      parentRefs:
+        - name: my-gateway
+          namespace: gateway-namespace
+      hostnames:
+        - loki.example.com
+```
+
+### Option 2: Bypass nginx and route directly to Loki services
+
+Use the top-level `route:` key (mutually exclusive with the top-level `ingress:`) to route Gateway API traffic directly to Loki services, bypassing nginx. The chart auto-generates path-based rules that route requests to the correct microservice components (distributor, query-frontend, ruler, compactor) when `deploymentMode: Distributed` is set.
+
+```yaml
+route:
+  main:
+    enabled: true
+    kind: HTTPRoute
+    parentRefs:
+      - name: my-gateway
+        namespace: gateway-namespace
+    hostnames:
+      - loki.example.com
+```
+
+For both options, if `apiVersion` is not set, the chart auto-detects the latest available Gateway API version installed in the cluster. Supported route kinds include `HTTPRoute`, `GRPCRoute`, `TCPRoute`, `TLSRoute`, and `UDPRoute`.
 
 ## Deploying the Loki Helm chart to a Production Environment
 

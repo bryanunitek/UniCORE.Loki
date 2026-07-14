@@ -2,7 +2,11 @@
 title: Migrate to Thanos storage clients
 menuTitle: Migrate to Thanos storage clients
 description: Migration guide for moving from existing storage clients to Thanos storage clients.
-weight: 
+weight: 300
+keywords:
+  - migrate
+  - thanos
+  - storage
 ---
 # Migrate to Thanos storage clients
 
@@ -194,7 +198,7 @@ When migrating from the existing [Azure](https://grafana.com/docs/loki/<LOKI_VER
 | `chunk_delimiter` | `chunk_delimiter` | No changes required |
 {{< /responsive-table >}}
 
-If you are using an authentication method other than storage account key or user-assigned managed identity, you'll have to pass the neccessary credetials using environment variables.
+If you are using an authentication method other than storage account key or user-assigned managed identity, you'll have to pass the necessary credentials using environment variables.
 For more details, refer to [Azure Identity Client Module for Go](https://pkg.go.dev/github.com/Azure/azure-sdk-for-go/sdk/azidentity).
 
 ### Filesystem Storage Migration
