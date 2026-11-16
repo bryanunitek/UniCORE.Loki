@@ -2937,6 +2937,20 @@ retention_backoff_config:
 # CLI flag: -compactor.delete-max-interval
 [delete_max_interval: <duration> | default = 24h]
 
+# Do not fail processing of a delete request with a line filter when a chunk it
+# needs to rebuild is indexed but missing from the object storage. When enabled,
+# the missing chunk is skipped and its index entry is left as is for diagnosing
+# the issue. Chunks skipped this way are counted by the
+# loki_compactor_deletion_missing_chunks_total metric and logged with their
+# chunk IDs. This setting has no effect when horizontal_scaling_mode is not
+# disabled. CAUTION: enable this only as a temporary escape hatch to unblock
+# delete requests, and only after verifying against the object storage that the
+# chunks really are missing. If a chunk gets skipped while it is in fact still
+# present, the data it holds is left undeleted even though the delete request is
+# reported as processed.
+# CLI flag: -compactor.deletion-ignore-missing-chunks
+[deletion_ignore_missing_chunks: <boolean> | default = false]
+
 # Maximum number of tables to compact in parallel. While increasing this value,
 # please make sure compactor has enough disk space allocated to be able to store
 # and compact as many tables.
@@ -6088,7 +6102,8 @@ The `s3_storage_config` block configures the connection to Amazon S3 object stor
 
 # Delimiter used to replace the default delimiter ':' in chunk IDs when storing
 # chunks. This is mainly intended when you run a MinIO instance on a Windows
-# machine. You should not change this value inflight.
+# machine. You must not change this value during operations, otherwise you may
+# not be able to read existing chunks from object storage.
 # CLI flag: -<prefix>.s3.chunk-delimiter
 [chunk_delimiter: <string> | default = ""]
 
